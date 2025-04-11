@@ -1,0 +1,12 @@
+version: '3'
+
+services:
+  playwright-mcp:
+    network_mode: host
+    ports: !reset []
+    volumes: !reset []
+    environment:
+      # Remove WSL2-specific environment variables by setting them to empty strings
+      - DISPLAY=
+      - WAYLAND_DISPLAY=
+      - XDG_RUNTIME_DIR=

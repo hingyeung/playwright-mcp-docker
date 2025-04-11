@@ -9,6 +9,10 @@ This project provides a Docker Compose environment to run the `@playwright/mcp` 
 *   Docker
 *   Docker Compose
 
+## Screenshot
+
+![VS Code Copilot Agent using Playwright MCP Docker Server](images/vscode-agent-using-playwright-mcp-docker-server.png)
+
 ## Setup
 
 1.  **Clone the repository:**
@@ -32,7 +36,14 @@ This project provides a Docker Compose environment to run the `@playwright/mcp` 
 
 1.  **Build and start the container:**
     ```bash
-    docker-compose up --build -d
+    # Use the convenience script that automatically detects your OS:
+    ./mcp-docker.sh up --build -d
+    
+    # Or use the standard docker compose command (for non-macOS):
+    docker compose up --build -d
+    
+    # For macOS, use both compose files explicitly:
+    docker compose -f docker-compose.yml -f docker-compose.macos.yml up --build -d
     ```
     The `--build` flag is only needed the first time or when `Dockerfile` changes. The `-d` flag runs the container in detached mode (in the background).
 
@@ -45,6 +56,7 @@ This project provides a Docker Compose environment to run the `@playwright/mcp` 
       {
         "mcpServers": {
           "playwright_sse": { // Server name is arbitrary
+            "type": "sse",
             "url": "http://localhost:8931/sse" // Match the port number in .env
           }
         }
@@ -55,21 +67,32 @@ This project provides a Docker Compose environment to run the `@playwright/mcp` 
 
 *   **`.env` file:** Manages environment-specific settings like ports, headless mode, and paths for headed mode.
 *   **`docker-compose.yml`:** Defines the Docker service, reads variables from `.env`, sets up port mapping and volumes.
+*   **`docker-compose.macos.yml`:** macOS-specific override that uses host network mode and disables port mapping and volume mounts.
+*   **`mcp-docker.sh`:** Convenience script that automatically detects your OS and uses the appropriate Docker Compose configuration.
 *   **`Dockerfile`:** Defines the Docker image, installs `@playwright/mcp` and its dependencies (including Chrome).
 *   **`entrypoint.sh`:** Script that runs when the container starts, passing the correct arguments (`--headless` or `--port`) to the `npx @playwright/mcp` command based on the `HEADLESS` environment variable.
 
 ### Switching Modes
 
-*   **Headless Mode:** Set `HEADLESS=true` in `.env`. Restart the container: `docker-compose up -d`.
-*   **Headed Mode:** Set `HEADLESS=false` in `.env`. Ensure your host environment (e.g., WSLg or X Server) is correctly set up. Restart the container: `docker-compose up -d`.
+*   **Headless Mode:** Set `HEADLESS=true` in `.env`. Restart the container: `./mcp-docker.sh up -d`.
+*   **Headed Mode:** Set `HEADLESS=false` in `.env`. Ensure your host environment (e.g., WSLg or X Server) is correctly set up. Restart the container: `./mcp-docker.sh up -d`.
 
 ### Headed Mode Notes (WSLg)
 
 *   If you are using WSLg on Windows, the default settings in `docker-compose.yml` and the WSL2-specific paths in `.env.sample` should generally work. Ensure the paths in your `.env` match your WSL distribution name if it's not `Ubuntu`.
 *   If you are not using WSLg (e.g., standard Linux desktop or macOS/Windows with a separate X Server), you will need to adjust the `DISPLAY` variable and potentially the volume mounts (`X11_HOST_PATH`) in your `.env` file according to your X Server setup.
 
+### macOS Notes
+
+*   On macOS, the `docker-compose.macos.yml` override file configures the container to use the host network mode and disables port mapping and volume mounts.
+*   The `mcp-docker.sh` script automatically detects macOS and applies these settings.
+
 ## Stopping the Server
 
 ```bash
-docker-compose down
+# Using the convenience script:
+./mcp-docker.sh down
+
+# Or using docker compose directly:
+docker compose down
 ```

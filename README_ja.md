@@ -7,6 +7,10 @@
 *   Docker
 *   Docker Compose
 
+## スクリーンショット
+
+![VS Code Copilot エージェントが Playwright MCP Docker サーバーを使用](images/vscode-agent-using-playwright-mcp-docker-server.png)
+
 ## セットアップ
 
 1.  **リポジトリをクローン:**
@@ -30,7 +34,14 @@
 
 1.  **コンテナをビルドして起動:**
     ```bash
-    docker-compose up --build -d
+    # OSを自動検出する便利なスクリプトを使用:
+    ./mcp-docker.sh up --build -d
+    
+    # または標準的なdocker composeコマンドを使用 (macOS以外の場合):
+    docker compose up --build -d
+    
+    # macOSの場合、両方のcomposeファイルを明示的に指定:
+    docker compose -f docker-compose.yml -f docker-compose.macos.yml up --build -d
     ```
     `--build` フラグは初回または `Dockerfile` が変更された場合にのみ必要です。`-d` フラグはコンテナをデタッチモード (バックグラウンド) で実行します。
 
@@ -43,6 +54,7 @@
       {
         "mcpServers": {
           "playwright_sse": { // サーバー名は任意
+            "type": "sse",
             "url": "http://localhost:8931/sse" // ポート番号は .env に合わせる
           }
         }
@@ -53,13 +65,15 @@
 
 *   **`.env` ファイル:** ポート、ヘッドレスモード、ヘッドありモード用のパスなど、環境固有の設定を管理します。
 *   **`docker-compose.yml`:** Docker サービスを定義し、`.env` から変数を読み込み、ポートマッピングとボリュームを設定します。
+*   **`docker-compose.macos.yml`:** macOS向けの特定のオーバーライドで、ホストネットワークモードを使用し、ポートマッピングとボリュームマウントを無効にします。
+*   **`mcp-docker.sh`:** OSを自動検出し、適切なDocker Compose設定を使用する便利なスクリプトです。
 *   **`Dockerfile`:** Docker イメージを定義し、`@playwright/mcp` とその依存関係 (Chrome を含む) をインストールします。
 *   **`entrypoint.sh`:** コンテナ起動時に実行されるスクリプトで、`HEADLESS` 環境変数に基づいて `npx @playwright/mcp` コマンドに適切な引数 (`--headless` または `--port`) を渡します。
 
 ### モードの切り替え
 
-*   **ヘッドレスモード:** `.env` で `HEADLESS=true` に設定します。コンテナを再起動します: `docker-compose up -d`。
-*   **ヘッドありモード:** `.env` で `HEADLESS=false` に設定します。ホスト環境 (例: WSLg または X Server) が正しくセットアップされていることを確認してください。コンテナを再起動します: `docker-compose up -d`。
+*   **ヘッドレスモード:** `.env` で `HEADLESS=true` に設定します。コンテナを再起動します: `docker compose up -d`。
+*   **ヘッドありモード:** `.env` で `HEADLESS=false` に設定します。ホスト環境 (例: WSLg または X Server) が正しくセットアップされていることを確認してください。コンテナを再起動します: `docker compose up -d`。
 
 ### ヘッドありモードに関する注意 (WSLg)
 
@@ -69,5 +83,5 @@
 ## サーバーの停止
 
 ```bash
-docker-compose down
+docker compose down
 ```
